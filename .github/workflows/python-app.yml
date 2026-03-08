@@ -33,7 +33,7 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
-        username: "ezambomsantana"
+        username: "esthefannysf"
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
     - name: Set up Docker Buildx
@@ -45,16 +45,37 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ezambomsantana/users-ci:${{ github.sha }}
+        tags: esthefannysf/users-ci:${{ github.sha }}
         
     - name: executing remote ssh commands using password
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.HOST_TEST }}
-        username: "ubuntu"
+        username: "deploy"
         key: ${{ secrets.KEY_TEST }}
         port: 22
         script: |
-          docker stop postgres-users
-          docker rm --force postgres-users
-          docker run -d --name postgres-users -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} --network=rede -p 5432:5432 weirdessen/users-ci:${{ github.sha }}
+          docker pull esthefannysf/users-ci:${{ github.sha }}
+
+          docker rm -f app-users || true
+          docker rm -f postgres-users || true
+
+          docker network create app-network || true
+
+          docker run -d \
+            --name postgres-users \
+            --network app-network \
+            -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            postgres:15
+
+          docker run -d \
+            --name app-users \
+            --network app-network \
+            -p 80:5000 \
+            -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            -e POSTGRES_HOST=postgres-users \
+            -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            esthefannysf/users-ci:${{ github.sha }}

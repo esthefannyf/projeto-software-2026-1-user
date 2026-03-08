@@ -5,10 +5,11 @@ import os
 
 postgres_user = os.environ.get('POSTGRES_USER', 'appuser')
 postgres_password = os.environ.get('POSTGRES_PASSWORD', 'apppass')
-postgres_url = os.environ.get('POSTGRES_URL', 'localhost')
+postgres_host = os.environ.get('POSTGRES_HOST', 'localhost')
+postgres_db = os.environ.get('POSTGRES_DB', 'users')
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_url}:5432/users"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5432/{postgres_db}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
