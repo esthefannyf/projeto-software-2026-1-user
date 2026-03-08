@@ -55,6 +55,7 @@ jobs:
         key: ${{ secrets.KEY_TEST }}
         port: 22
         script: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u esthefannysf --password-stdin
           docker pull esthefannysf/users-ci:${{ github.sha }}
 
           docker rm -f app-users || true
